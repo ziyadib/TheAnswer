@@ -5,7 +5,7 @@
 int main(){
 
 if(creer_serveur(8080)==-1){
-perror("serveur de merde");
+perror("pb creer_serveur");
 }
 
 return 0;
