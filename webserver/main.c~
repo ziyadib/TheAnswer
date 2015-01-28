@@ -1,6 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+#include "socket.h"
 
 int main(){
 
+printf("hello");
+
 return 0;
 }
-
