@@ -1,0 +1,6 @@
+pawnee
+*.o
+*.*~
+makefile.dep
+Makefile~
+
