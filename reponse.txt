@@ -1,0 +1,12 @@
+3.2.1 Test de Votre programme
+
+1) Il se passe ceci :
+ bind socker_serveur : Address already in use
+pb creer_serveur: Address already in use
+error accept: Bad file descriptor
+
+L'appel de la fontion bind echoue et nous informe que l'adresse IP existe déjà. Pareil pour la création du serveur
+
+
+2) une fois que l'on lance le serveur et nc -z 127.0.0.1 8080 dans le client, le client se ferme et le serveur affich son messsage, execute le sleep et se ferme;
+
