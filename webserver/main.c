@@ -22,11 +22,12 @@ perror("pb creer_serveur");
     while(1){
      size_client = sizeof(client_addr);
     clientfd = accept(socket_serveur,(struct sockaddr *) &client_addr,&size_client);
-   
+  
     if(clientfd == -1){
     perror("error accept");
     return -1;
     }
+    if(fork() ==0){
     printf("hey un nouveau client est connecté\n");
     /*envoie du sms de bienvenue */
     if(write(clientfd,MESSAGE_BIENVENUE, strlen(MESSAGE_BIENVENUE))==-1){
@@ -46,6 +47,8 @@ perror("pb creer_serveur");
        return -1;
     }
     }
+    }else{
+    close(clientfd);
 }
 return 0;
 }
