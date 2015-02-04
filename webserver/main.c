@@ -35,28 +35,28 @@ int main(){
 			return -1;
 		}
 		printf("hey un nouveau client est connecté\n");
-        if(fork()==0){
-		sleep(1);
-		/*envoie du sms de bienvenue */
-		if(write(clientfd,MESSAGE_BIENVENUE, strlen(MESSAGE_BIENVENUE))==-1){
-			perror("error welcome message");
-			return -1;
-		}
-		printf("jecris un sms de bienvenue\n");
-		while(1){
-			if((retfd=read(clientfd, sms_client, 256))==-1){
+		if(fork()==0){
+			sleep(1);
+			/*envoie du sms de bienvenue */
+			if(write(clientfd,MESSAGE_BIENVENUE, strlen(MESSAGE_BIENVENUE))==-1){
+				perror("error welcome message");
 				return -1;
 			}
+			printf("jecris un sms de bienvenue\n");
+			while(1){
+				if((retfd=read(clientfd, sms_client, 256))==-1){
+					return -1;
+				}
 
-			sms_client[retfd] = '\0';
-			printf("%s \n", sms_client);
-			if(write(clientfd, sms_client, retfd)==-1){
-				perror("error perroquet");
-				return -1;
+				sms_client[retfd] = '\0';
+				printf("%s \n", sms_client);
+				if(write(clientfd, sms_client, retfd)==-1){
+					perror("error perroquet");
+					return -1;
+				}
 			}
-		}
-		}else{
-		close(clientfd);
+		} else {
+			close(clientfd);
 		}
 	}
 	return 0;
