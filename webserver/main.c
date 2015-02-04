@@ -28,6 +28,8 @@ perror("pb creer_serveur");
     return -1;
     }
     printf("hey un nouveau client est connecté\n");
+    
+    sleep(1);
     /*envoie du sms de bienvenue */
     if(write(clientfd,MESSAGE_BIENVENUE, strlen(MESSAGE_BIENVENUE))==-1){
     perror("error welcome message");
