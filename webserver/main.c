@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+ #include <string.h>
 #include <sys/types.h>
 #include "socket.h"
 #include <sys/socket.h>
@@ -28,7 +29,7 @@ perror("pb creer_serveur");
     }
     printf("hey un nouveau client est connecté\n");
     /*envoie du sms de bienvenue */
-    if(write(clientfd,MESSAGE_BIENVENUE, sizeof(MESSAGE_BIENVENUE))==-1){
+    if(write(clientfd,MESSAGE_BIENVENUE, strlen(MESSAGE_BIENVENUE))==-1){
     perror("error welcome message");
     return -1;
     }
@@ -40,7 +41,7 @@ perror("pb creer_serveur");
         
         sms_client[retfd] = '\0';
         printf("%s \n", sms_client);
-       if(write(socket_serveur, sms_client, retfd)==-1){
+       if(write(clientfd, sms_client, retfd)==-1){
        perror("error perroquet");
        return -1;
     }
