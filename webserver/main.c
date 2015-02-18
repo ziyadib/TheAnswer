@@ -45,12 +45,13 @@ void filterString(char string[]){
 
 }
 
+
 int main(){
 	int clientfd, /*retfd,*/socket_serveur ;
 	unsigned int size_client;
 	 char sms_client[1024] ;
 	struct sockaddr_in client_addr;
-	char *serverName = "TheAnswer";
+	/*char *serverName = "TheAnswer";*/
 	char *retgets;
 	/*char *MESSAGE_BIENVENUE = "Bonjour, Welcome, Bienvenido, Bienvenito, ahlan wa sahlan, vous etes connecté au merveilleux serveur The Answer, tout vos desirs sont des ordres je me ferais un réel plaisir de vous servir et de pouvoir repondre à vos magnifiques questions avec la plus belle facon possible, c'est a dire avec un super smile :D, bonnne navigation et au plaisir de vous revoir tres bientot et tres souvent merveilleux utilisateur que vous etes\n";
 	*/
@@ -91,22 +92,18 @@ int main(){
 		        break;
 		        }
 		        printf("%s", sms_client);
-		        /* on lui renvoie le message recu par le client */
+		        /* on lui renvoie le message recu par le client 
 		         
 			if(fprintf(open, "<%s>  %s",serverName, sms_client)<=0){
 				perror("error perroquet fprintf");
 				return -1;
-			}
+			}*/
 		        filterString(sms_client);
 		    }while(retgets != NULL || strlen(sms_client));
 			
 			
 		
-	/*	printf("%s \n je suis avant le perroquet", sms_client);
-			if(fprintf(open, "<%s>  %s",serverName, sms_client)<=0){
-				perror("error perroquet fprintf");
-				return -1;
-			}*/
+
 			
 		/*printf("client deconnecté\n");*/
 		exit(0);

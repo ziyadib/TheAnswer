@@ -10,3 +10,11 @@ L'appel de la fontion bind echoue et nous informe que l'adresse IP existe déjà
 
 2) une fois que l'on lance le serveur et nc -z 127.0.0.1 8080 dans le client, le client se ferme et le serveur affich son messsage, execute le sleep et se ferme;
 
+
+********5.2.1 REQUETE ****************
+3) LE MESSAGE ENVOYÉ PAR LE CLIENT EST LE SUIVANT : 
+GET / HTTP/1.1
+User-Agent: curl/7.26.0
+Host: localhost:8080
+Accept: */*
+
