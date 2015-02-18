@@ -21,7 +21,6 @@ void initialiser_signaux(void){
     sa.sa_handler = traitement_signal ;
     sigemptyset (&sa.sa_mask );
     sa.sa_flags = SA_RESTART;
-    
 	if(signal(SIGPIPE, SIG_IGN) == SIG_ERR){
 		perror("signal");
 	}
@@ -33,22 +32,57 @@ void initialiser_signaux(void){
 
 void filterString(char string[]){
     unsigned int i;
-     char r= '\r';
-     char n ='\n';
+    char r= '\r';
+    char n ='\n';
     for(i =0; i<strlen(string); i++){
-    
-    if(string[i] == r || string[i] == n ){
-        string[i]= '\0';
+        if(string[i] == r || string[i] == n ){
+            string[i]= '\0';
+        }
     }
-    
-    }
+}
 
+char *fgets_or_exit(char *buffer , int size , FILE *stream){
+    char *retgets;
+    if((retgets = fgets(buffer, size, stream)) == NULL){
+        exit(0);
+    }
+    return retgets;
+}
+
+void first_line(int size, FILE *open){
+    int ok = 1; //0=false, 1=true;
+    const char *chaine_erreur= "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n400 Bad request\r\n";
+    const char *chaine_erreur404= "HTTP/1.1 404 Not found\r\nConnection: close\r\nContent-Length: 15\r\n404 Not found\r\n";
+    const char* okSMS = "HTTP/1.1 200 OK\r\n";
+    char premiere_ligne[1024];
+    char method[10], url[1024];
+    int major, minor;
+    fgets(premiere_ligne, size, open);
+    sscanf("%s %s HTTP/%d.%d", method, url, &major, &minor);
+    if(strcmp(method, "GET")!= 0){
+        fprintf(open,"%s", chaine_erreur);
+        ok=0;
+    }
+    if(strcmp(url, "/")!= 0){
+        fprintf(open,"%s", chaine_erreur404);
+        ok=0;
+    }
+    if(major != 1){
+        fprintf(open,"%s", chaine_erreur);
+        ok=0;
+    }
+    if(minor !=0 && minor !=1){
+        fprintf(open,"%s", chaine_erreur);
+        ok=0;
+    }
+    if(ok==0)
+        fprintf(open, "%s", okSMS);
 }
 
 int main(){
 	int clientfd, /*retfd,*/socket_serveur ;
 	unsigned int size_client;
-	 char sms_client[1024] ;
+    char sms_client[1024] ;
 	struct sockaddr_in client_addr;
 	char *serverName = "TheAnswer";
 	char *retgets;
@@ -74,7 +108,7 @@ int main(){
 		if((open= fdopen(clientfd , "w+"))== NULL){
            perror("fdopen error");
            return -1;
-         }
+        }
          
 		/*envoie du sms de bienvenue */
 		/*if(write(clientfd,MESSAGE_BIENVENUE, strlen(MESSAGE_BIENVENUE))==-1){
@@ -83,14 +117,11 @@ int main(){
 		}
 		
 		printf("jecris un sms de bienvenue\n");*/
+		first_line(1024, open);
 		do{
-		
-		/*utilisation de fgets au lieu de read pour lire une ligne recu du client*/
-		    if((retgets =fgets(sms_client, 1024, open)) == NULL){
-		        perror("fgets error");
-		        break;
-		        }
-		        printf("%s", sms_client);
+            /*utilisation de fgets au lieu de read pour lire une ligne recu du client*/
+		    retgets = fgets_or_exit(sms_client, 1024, open);
+            printf("%s", sms_client);
 		        /* on lui renvoie le message recu par le client */
 		         
 			if(fprintf(open, "<%s>  %s",serverName, sms_client)<=0){
@@ -98,23 +129,22 @@ int main(){
 				return -1;
 			}
 		        filterString(sms_client);
-		    }while(retgets != NULL || strlen(sms_client));
+        } while(retgets != NULL || strlen(sms_client));
 			
 			
 		
-	/*	printf("%s \n je suis avant le perroquet", sms_client);
+        /*	printf("%s \n je suis avant le perroquet", sms_client);
 			if(fprintf(open, "<%s>  %s",serverName, sms_client)<=0){
 				perror("error perroquet fprintf");
 				return -1;
 			}*/
 			
 		/*printf("client deconnecté\n");*/
-		exit(0);
+            exit(0);
 		
-		}else{
-		
-		traitement_signal(SIGCHLD);
-		close(clientfd);
+		} else {
+            traitement_signal(SIGCHLD);
+            close(clientfd);
     /* fermeture du client dans le pere i.e: il ext executé dans le fils*/
 		}
 	}
