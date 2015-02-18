@@ -13,7 +13,7 @@
 
 void traitement_signal(int sig){
     waitpid(-1, NULL, WNOHANG);
-    printf("Signal%dreçu\n",sig);
+    printf("Signal%dreçu\n client deconnecté",sig);
 }
 
 void initialiser_signaux(void){
@@ -88,20 +88,27 @@ int main(){
 		/*utilisation de fgets au lieu de read pour lire une ligne recu du client*/
 		    if((retgets =fgets(sms_client, 1024, open)) == NULL){
 		        perror("fgets error");
-		        return -1;
+		        break;
 		        }
 		        printf("%s", sms_client);
+		        /* on lui renvoie le message recu par le client */
+		         
+			if(fprintf(open, "<%s>  %s",serverName, sms_client)<=0){
+				perror("error perroquet fprintf");
+				return -1;
+			}
 		        filterString(sms_client);
 		    }while(retgets != NULL || strlen(sms_client));
 			
 			
 		
-		printf("%s \n", sms_client);
+	/*	printf("%s \n je suis avant le perroquet", sms_client);
 			if(fprintf(open, "<%s>  %s",serverName, sms_client)<=0){
 				perror("error perroquet fprintf");
 				return -1;
-			}
-		printf("client deconnecté\n");
+			}*/
+			
+		/*printf("client deconnecté\n");*/
 		exit(0);
 		
 		}else{
