@@ -55,21 +55,23 @@ int first_line( FILE *open){
     char method[10], url[1024];
     int major, minor;
     fgets(premiere_ligne, 1024, open);
-    sscanf("%s %s HTTP/%d.%d", method, url, &major, &minor);
-    
-        /************ afficher la premiere ligne de la requete *********/
-       printf("%s \n", premiere_ligne);
+    sscanf(premiere_ligne,"%s %s HTTP/%d.%d", method, url, &major, &minor);
+
+ 
        
        
     if(strcmp(method, "GET")!= 0){
+  
         ok=0;
           
     }
     else if(strcmp(url, "/")!= 0){
+    
         ok=-1;
         
     }
     else if(major != 1){
+    
         ok=0;
        
     }
@@ -89,12 +91,12 @@ int main(){
 	struct sockaddr_in client_addr;
 	
 	/*char *serverName = "TheAnswer";*/
-	char *retgets;
+	
 	/*char *MESSAGE_BIENVENUE = "Bonjour, Welcome, Bienvenido, Bienvenito, ahlan wa sahlan, vous etes connecté au merveilleux serveur The Answer, tout vos desirs sont des ordres je me ferais un réel plaisir de vous servir et de pouvoir repondre à vos magnifiques questions avec la plus belle facon possible, c'est a dire avec un super smile :D, bonnne navigation et au plaisir de vous revoir tres bientot et tres souvent merveilleux utilisateur que vous etes\n";
 	*/
-	  const char *chaine_erreur= "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n400 Bad request\r\n";
-    const char *chaine_erreur404= "HTTP/1.1 404 Not found\r\nConnection: close\r\nContent-Length: 15\r\n404 Not found\r\n";
-      const char* okSMS = "HTTP/1.1 200 OK\r\n";
+	  const char *chaine_erreur= "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n";
+    const char *chaine_erreur404= "HTTP/1.1 404 Not found\r\nConnection: close\r\nContent-Length: 15\r\n\r\n404 Not found\r\n";
+      const char* okSMS = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 13\r\n\r\nTout est ok\r\n";
     
 	initialiser_signaux();
 	if((socket_serveur=creer_serveur(8080))==-1){
@@ -128,8 +130,8 @@ int main(){
 		int ok =first_line(open);
 		do{
             /*utilisation de fgets au lieu de read pour lire une ligne recu du client*/
-		    retgets = fgets_or_exit(sms_client, 1024, open);
-            printf("%s \n", sms_client);
+		     fgets_or_exit(sms_client, 1024, open);
+            printf("%d %s \n",(int) strlen(sms_client), sms_client);
 		        /* on lui renvoie le message recu par le client 
 
 		         
@@ -138,8 +140,9 @@ int main(){
 				return -1;
 			}*/
 		        filterString(sms_client);
-        } while(retgets != NULL || strlen(sms_client));
-			
+		         printf("%d %s \n",(int) strlen(sms_client), sms_client);
+        } while(strlen(sms_client));
+			printf("the answer sort de la boucle de lecture");
 			if (ok == -1)
 			fprintf(open,"%s",chaine_erreur404);
 			if(ok==0)
