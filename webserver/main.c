@@ -10,6 +10,17 @@
 #include <signal.h>
 #include <sys/wait.h>
 
+enum http_method {
+HTTP_GET ,
+HTTP_UNSUPPORTED ,
+};
+typedef struct
+{
+enum http_method method;
+int major_version;
+int minor_version;
+char url[1024];
+} http_request;
 
 void traitement_signal(int sig){
     waitpid(-1, NULL, WNOHANG);
@@ -49,17 +60,16 @@ char *fgets_or_exit(char *buffer , int size , FILE *stream){
     return retgets;
 }
 
-int first_line( FILE *open){
+int parse_http_request(FILE *open,http_request *request){
+    /* la lecture de la premiere ligne etait deja faite precedemment dans cette fonction */
     int ok = 1; //0=false, 1=true;
     char premiere_ligne[1024];
     char method[10], url[1024];
-    int major, minor;
+    
     fgets(premiere_ligne, 1024, open);
-    sscanf(premiere_ligne,"%s %s HTTP/%d.%d", method, url, &major, &minor);
+    sscanf(premiere_ligne,"%s %s HTTP/%d.%d", method, request->url, &request->major_version,&request->minor_version);
 
- 
-       
-       
+        
     if(strcmp(method, "GET")!= 0){
   
         ok=0;
@@ -67,18 +77,23 @@ int first_line( FILE *open){
     }
     else if(strcmp(url, "/")!= 0){
     
-        ok=-1;
+        ok=0;
         
     }
-    else if(major != 1){
+    else if(request->major_version != 1){
     
         ok=0;
        
     }
-    else if(minor !=0 && minor !=1){
+    else if(request->minor_version !=0 && request->minor_version !=1){
         ok=0;
     }
     
+   
+    if(ok == 1){
+          /*si ok==1 alors on a forcement la method GET*/
+    request->method = HTTP_GET;        
+    }  
      
     return ok;
 }
@@ -93,6 +108,7 @@ void skip_headers(FILE *client){
 }
 
 int main(){
+    http_request request; 
 	int clientfd, /*retfd,*/socket_serveur ;
 	unsigned int size_client;
     char sms_client[1024] ;
@@ -135,7 +151,7 @@ int main(){
 		}
 		
 		printf("jecris un sms de bienvenue\n");*/
-		int ok =first_line(open);
+		int ok =parse_http_request(open,&request);
 		do{
             /*utilisation de fgets au lieu de read pour lire une ligne recu du client*/
 		     fgets_or_exit(sms_client, 1024, open);
