@@ -108,6 +108,16 @@ void skip_headers(FILE *client){
     ret = fgets_or_exit(message,1024,client);
     }
 }
+char *rewrite_url(char *url){
+    int i = 0;
+    while(url[i] != '?'){
+        i++;
+    }
+    char *subbuff= malloc(sizeof(url));
+    memcpy(subbuff, &url[0],i);
+    subbuff[i] = '\0';   
+   return subbuff;
+}
 
 void send_status(FILE *client , int code , const char *reason_phrase, http_request request){
       
