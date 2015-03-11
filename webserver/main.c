@@ -83,6 +83,14 @@ int first_line( FILE *open){
     return ok;
 }
 
+void skip_headers(FILE *client){
+    char message[1024];
+    char *ret = fgets_or_exit(message,1024,client);
+    int n = strlen(ret);
+    while (n > 2){
+    ret = fgets_or_exit(message,1024,client);
+    }
+}
 
 int main(){
 	int clientfd, /*retfd,*/socket_serveur ;
