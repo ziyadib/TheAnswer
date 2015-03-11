@@ -72,7 +72,7 @@ int parse_http_request(FILE *open,http_request *request){
         
     if(strcmp(method, "GET")!= 0){
   
-        ok=0;
+        ok=-1;
           
     }
     else if(strcmp(url, "/")!= 0){
@@ -93,7 +93,9 @@ int parse_http_request(FILE *open,http_request *request){
     if(ok == 1){
           /*si ok==1 alors on a forcement la method GET*/
     request->method = HTTP_GET;        
-    }  
+    }else {
+    request->method = HTTP_UNSUPPORTED;
+    }
      
     return ok;
 }
@@ -107,6 +109,19 @@ void skip_headers(FILE *client){
     }
 }
 
+void send_status(FILE *client , int code , const char *reason_phrase, http_request request){
+      
+char status_line[1024]; 
+ snprintf(status_line, 1024,"HTTP/%d.%d %d %s \r\n", request.major_version, request.minor_version, code, reason_phrase);
+fprintf(client,"%s",status_line);
+
+}
+void send_response(FILE *client , int code ,http_request request, const char *reason_phrase ,const char *message_body){
+    send_status(client,code,reason_phrase, request);
+
+    /* envoie le corps du message selon les differents cas */
+    fprintf(client,"%s",message_body);
+}
 int main(){
     http_request request; 
 	int clientfd, /*retfd,*/socket_serveur ;
