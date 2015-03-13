@@ -143,10 +143,10 @@ int main(){
 	
 	char *MESSAGE_BIENVENUE = "Bonjour, Welcome, Bienvenido, Bienvenito, ahlan wa sahlan, vous etes connecté au merveilleux serveur The Answer, tout vos desirs sont des ordres je me ferais un réel plaisir de vous servir et de pouvoir repondre à vos magnifiques questions avec la plus belle facon possible, c'est a dire avec un super smile :D, bonnne navigation et au plaisir de vous revoir tres bientot et tres souvent merveilleux utilisateur que vous etes\n";
 	
-	  const char *chaine_erreur= "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n";
+	  /*const char *chaine_erreur= "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n";
     const char *chaine_erreur404= "HTTP/1.1 404 Not found\r\nConnection: close\r\nContent-Length: 15\r\n\r\n404 Not found\r\n";
       const char* okSMS = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 13\r\n\r\nTout est ok\r\n";
-    
+    */
 	initialiser_signaux();
 	if((socket_serveur=creer_serveur(8080))==-1){
 		perror("pb creer_serveur");
@@ -169,14 +169,8 @@ int main(){
            return -1;
         }
          
-		/*envoie du sms de bienvenue */
-		/*if(write(clientfd,MESSAGE_BIENVENUE, strlen(MESSAGE_BIENVENUE))==-1){
-			perror("error welcome message");
-			return -1;
-		}
-		
-		printf("jecris un sms de bienvenue\n");*/
-		int ok =parse_http_request(open,&request);
+	
+		int bad_request =parse_http_request(open,&request);
 		do{
             /*utilisation de fgets au lieu de read pour lire une ligne recu du client*/
 		     fgets_or_exit(sms_client, 1024, open);
@@ -191,8 +185,9 @@ int main(){
 		        filterString(sms_client);
 		         printf("%d %s \n",(int) strlen(sms_client), sms_client);
         } while(strlen(sms_client));
+        
 			printf("the answer sort de la boucle de lecture");
-			if (ok == -1){
+			/*if (ok == -1){
 			fprintf(open,"%s",chaine_erreur404);
 			}else{
 			fprintf(open,"%s",MESSAGE_BIENVENUE);
@@ -201,7 +196,16 @@ int main(){
 			fprintf(open,"%s",chaine_erreur);
 			if(ok==1)
 			fprintf(open,"%s",okSMS);
+			*/
 			
+			if (bad_request == -1)
+            send_response(open , 400, request, "Bad Request", "Bad request\r\n");
+            else if (request.method == HTTP_UNSUPPORTED)
+            send_response(open , 405, request, "Method Not Allowed", "Method Not Allowed\r\n");
+            else if (strcmp(request.url, "/") == 0)
+            send_response(open , 200,request, "OK", MESSAGE_BIENVENUE);
+            else
+            send_response(open , 404, request, "Not Found", "Not Found\r\n");
 		
 
 			
