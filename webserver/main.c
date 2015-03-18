@@ -9,7 +9,7 @@
 #include <netinet/ip.h>
 #include <signal.h>
 #include <sys/wait.h>
-
+#include <sys/stat.h>
 enum http_method {
 HTTP_GET ,
 HTTP_UNSUPPORTED ,
@@ -116,10 +116,8 @@ char *rewrite_url(char *url){
     while(url[i] != '?'){
         i++;
     }
-    char *subbuff= malloc(sizeof(url));
-    memcpy(subbuff, &url[0],i);
-    subbuff[i] = '\0';   
-   return subbuff;
+    url[i] = '\0';
+   return url;
 }
 
 void send_status(FILE *client , int code , const char *reason_phrase, http_request request){
@@ -136,11 +134,12 @@ void send_response(FILE *client , int code ,http_request request, const char *re
     fprintf(client,"%s",message_body);
     fflush(client);
 }
-int main(){
+int main(int argc, char *argv[]){
     http_request request; 
 	int clientfd, /*retfd,*/socket_serveur ;
 	unsigned int size_client;
-   
+	char *chemin;
+    struct stat buf;
 	struct sockaddr_in client_addr;
 	
 	
@@ -160,6 +159,19 @@ int main(){
 			perror("error accept");
 			return -1;
 		}
+		
+		
+		chemin = rewrite_url(argv[1]);
+		if(stat(chemin, &buf)==0){/* ignore if directory */
+          if(S_ISDIR(buf.st_mode)== -1){
+            printf(" %s %d\n", chemin, argc);
+	        return -1;
+          }
+        }else{
+            perror("stat");
+            return -1;
+        }
+        
 		printf("hey un nouveau client est connecté\n");
 
         if(fork()==0){
