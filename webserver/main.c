@@ -118,6 +118,14 @@ void send_response(FILE *client , int code ,http_request request, const char *re
 	fprintf(client,"%s",message_body);
 	fflush(client);
 }
+
+int get_file_size(int fd){
+    struct stat buf;
+    if(fstat(fd, buf)==-1)
+        return -1;
+    return buf.st_size;
+}
+
 int check_and_open ( const char * url , const char * document_root ){
 
 
@@ -174,7 +182,11 @@ int main(int argc, char *argv[]){
 				send_response(open , 405, request, "Method Not Allowed", "Method Not Allowed\r\n");
 			else if (strcmp(request.url, "/") == 0){				
 				snprintf(buffer_url, 256, "%s/%s", argv[1], request.url);
-				send_response(open , 200,request, "OK", MESSAGE_BIENVENUE);
+				if(check_and_open(request.url, argv[1])==-1){
+				    send_response(open , 404, request, "Not Found", "Not Found\r\n");
+				} else {
+				    send_response(open , 200,request, "OK", MESSAGE_BIENVENUE);
+				}
 			}
 			
 			exit(0);
