@@ -121,7 +121,7 @@ void send_response(FILE *client , int code ,http_request request, const char *re
 
 int main(int argc, char *argv[]){
 	http_request request; 
-	int clientfd, /*retfd,*/socket_serveur ;
+	int clientfd, socket_serveur ;
 	unsigned int size_client;
 	char* chemin;
 	struct stat buf;
@@ -172,6 +172,7 @@ int main(int argc, char *argv[]){
 				snprintf(buffer, 256, "%s/%s", argv[1], request.url);
 				send_response(open , 200,request, "OK", MESSAGE_BIENVENUE);
 			}
+			
 			exit(0);
 		} else {
 			traitement_signal(SIGCHLD);
