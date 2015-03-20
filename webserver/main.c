@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 enum http_method {
 	HTTP_GET ,
@@ -62,7 +63,7 @@ char *fgets_or_exit(char *buffer , int size , FILE *stream){
 char *rewrite_url(char *url){
 	int i = 0;
 	while(url[i] != '?'){
-	i++;	
+	    i++;	
 	}
 	url[i] = '\0';
 	return url;
@@ -109,28 +110,51 @@ void skip_headers(FILE *client){
 void send_status(FILE *client , int code , const char *reason_phrase, http_request request){
 	char status_line[1024]; 
 	snprintf(status_line, 1024,"HTTP/%d.%d %d %s \r\n", request.major_version, request.minor_version, code, reason_phrase);
-	fprintf(client,"%s",status_line);
+	fprintf(client, "%s", status_line);
 }
 
 void send_response(FILE *client , int code ,http_request request, const char *reason_phrase ,const char *message_body){
 	send_status(client,code,reason_phrase, request);
 	/* envoie le corps du message selon les differents cas */
-	fprintf(client,"%s",message_body);
+	fprintf(client, "%s", message_body);
 	fflush(client);
 }
 
 int get_file_size(int fd){
     struct stat buf;
-    if(fstat(fd, buf)==-1)
+    if(fstat(fd, &buf)==-1)
         return -1;
     return buf.st_size;
 }
 
-int check_and_open ( const char * url , const char * document_root ){
-
-
-return 0;
+int check_and_open(const char* url, const char* document_root){   
+	char buffer_url[256];
+    struct stat buf;
+	snprintf(buffer_url, 256, "%s/%s", document_root,url);
+	if(stat(buffer_url, &buf)==0){
+        if(S_ISREG(buf.st_mode)== -1){
+            perror("is not regular file!");
+            return -1;
+        } else {
+            return open(buffer_url, O_RDONLY);
+        }
+    }
+    return -1;
 }
+
+int copy(int in, int out){
+    char buf[1024];
+    if(read(in, &buf, sizeof(in)) == -1){
+        perror("copy_read");
+        return -1;
+    }
+    if(write(out, &buf, sizeof(buf)) == -1){
+        perror("copy_write");
+        return -1;
+    }
+    return 0;
+}
+
 int main(int argc, char *argv[]){
 	http_request request; 
 	int clientfd, socket_serveur ;
@@ -138,8 +162,9 @@ int main(int argc, char *argv[]){
 	char* chemin;
 	struct stat buf;
 	struct sockaddr_in client_addr;
-	char *MESSAGE_BIENVENUE = "Bonjour, Welcome, Bienvenido, Bienvenito, ahlan wa sahlan, vous etes connecté au merveilleux serveur The Answer, tout vos desirs sont des ordres je me ferais un réel plaisir de vous servir et de pouvoir repondre à vos magnifiques questions avec la plus belle facon possible, c'est a dire avec un super smile :D, bonnne navigation et au plaisir de vous revoir tres bientot et tres souvent merveilleux utilisateur que vous etes\n";
-	char buffer_url[256];
+	/*char *MESSAGE_BIENVENUE = "Bonjour, Welcome, Bienvenido, Bienvenito, ahlan wa sahlan, vous etes connecté au merveilleux serveur The Answer, tout vos desirs sont des ordres je me ferais un réel plaisir de vous servir et de pouvoir repondre à vos magnifiques questions avec la plus belle facon possible, c'est a dire avec un super smile :D, bonnne navigation et au plaisir de vous revoir tres bientot et tres souvent merveilleux utilisateur que vous etes\n";*/
+	int fd_target;
+	
 	initialiser_signaux();
 	if((socket_serveur=creer_serveur(8080))==-1){
 		perror("pb creer_serveur");
@@ -156,8 +181,8 @@ int main(int argc, char *argv[]){
 		printf("%s\n", chemin);
 		if(stat(chemin, &buf)==0){/* ignore if directory */
 			if(S_ISDIR(buf.st_mode)== -1){
-				printf(" %s %d\n", chemin, argc);
-			return -1;
+				printf("%s %d\n", chemin, argc);
+			    return -1;
 			}
 		} else {
 			perror("stat");
@@ -166,11 +191,11 @@ int main(int argc, char *argv[]){
 		printf("hey un nouveau client est connecté\n");
 		if(fork()==0){
 				FILE *open;
-				if((open= fdopen(clientfd , "w+"))== NULL){
+				if((open= fdopen(clientfd, "w+"))== NULL){
 					perror("fdopen error");
 					return -1;
 				}
-			int bad_request =parse_http_request(open,&request);
+			int bad_request = parse_http_request(open, &request);
 			skip_headers(open);
 
 			/* envoie de la reponse au client */
@@ -180,15 +205,17 @@ int main(int argc, char *argv[]){
 				send_response(open , 404, request, "Not Found", "Not Found\r\n");
 			else if (request.method == HTTP_UNSUPPORTED)
 				send_response(open , 405, request, "Method Not Allowed", "Method Not Allowed\r\n");
-			else if (strcmp(request.url, "/") == 0){				
-				snprintf(buffer_url, 256, "%s/%s", argv[1], request.url);
-				if(check_and_open(request.url, argv[1])==-1){
+			else if (strcmp(request.url, "/") == 0){
+			    fd_target = check_and_open(request.url, argv[1]);
+				if(fd_target == -1){
 				    send_response(open , 404, request, "Not Found", "Not Found\r\n");
 				} else {
-				    send_response(open , 200,request, "OK", MESSAGE_BIENVENUE);
+				    /*send_response(open , 200,request, "OK", MESSAGE_BIENVENUE);*/
+				    send_status(open, 200, "OK", request);
+				    fprintf(open, "Content-Length: %d", get_file_size(fd_target));
+				    fprintf(open, "\r\n");
 				}
-			}
-			
+            }			
 			exit(0);
 		} else {
 			traitement_signal(SIGCHLD);
@@ -198,3 +225,11 @@ int main(int argc, char *argv[]){
 	}
 	return 0;
 }
+
+/*
+    git commit -m 'tag'
+    git tag nomTag
+    git push --tags
+    git commit -am 'modif effectuée'
+    git push
+*/
