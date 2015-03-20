@@ -62,7 +62,7 @@ char *fgets_or_exit(char *buffer , int size , FILE *stream){
 char *rewrite_url(char *url){
 	int i = 0;
 	while(url[i] != '?'){
-		
+	i++;	
 	}
 	url[i] = '\0';
 	return url;
