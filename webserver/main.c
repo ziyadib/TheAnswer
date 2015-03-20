@@ -24,7 +24,7 @@ typedef struct {
 
 void traitement_signal(int sig){
 	waitpid(-1, NULL, WNOHANG);
-	printf("Signal%dreçu \n client deconnecté",sig);
+	printf("Signal %d reçu \n client deconnecté \n",sig);
 }
 
 void initialiser_signaux(void){
@@ -127,6 +127,7 @@ int main(int argc, char *argv[]){
 	struct stat buf;
 	struct sockaddr_in client_addr;
 	char *MESSAGE_BIENVENUE = "Bonjour, Welcome, Bienvenido, Bienvenito, ahlan wa sahlan, vous etes connecté au merveilleux serveur The Answer, tout vos desirs sont des ordres je me ferais un réel plaisir de vous servir et de pouvoir repondre à vos magnifiques questions avec la plus belle facon possible, c'est a dire avec un super smile :D, bonnne navigation et au plaisir de vous revoir tres bientot et tres souvent merveilleux utilisateur que vous etes\n";
+	char buffer_url[256];
 	initialiser_signaux();
 	if((socket_serveur=creer_serveur(8080))==-1){
 		perror("pb creer_serveur");
@@ -167,9 +168,8 @@ int main(int argc, char *argv[]){
 				send_response(open , 404, request, "Not Found", "Not Found\r\n");
 			else if (request.method == HTTP_UNSUPPORTED)
 				send_response(open , 405, request, "Method Not Allowed", "Method Not Allowed\r\n");
-			else if (strcmp(request.url, "/") == 0){
-				char buffer[256];
-				snprintf(buffer, 256, "%s/%s", argv[1], request.url);
+			else if (strcmp(request.url, "/") == 0){				
+				snprintf(buffer_url, 256, "%s/%s", argv[1], request.url);
 				send_response(open , 200,request, "OK", MESSAGE_BIENVENUE);
 			}
 			exit(0);
