@@ -79,10 +79,12 @@ int parse_http_request(FILE *open, http_request *request){
 	if(strcmp(method, "GET")!= 0){
 		ok=-2;
 	}
+	/*
 	else if(strcmp(request->url, "/") !=0){
 		printf("url : '%s'\n", request->url);
 		ok=-1;
 	}
+	*/
 	else if(request->major_version != 1){
 		ok=0;
 	}
@@ -130,10 +132,11 @@ int get_file_size(int fd){
 int check_and_open(const char* url, const char* document_root){   
 	char buffer_url[256];
     struct stat buf;
-	snprintf(buffer_url, 256, "%s/%s", document_root,url);
-	if(stat(buffer_url, &buf)==0){
-        if(S_ISREG(buf.st_mode)== -1){
-            perror("is not regular file!");
+	snprintf(buffer_url, 256, "%s%s", document_root, url);
+	printf("Chemin de la ressource demandée : %s\n", buffer_url);
+	if(stat(buffer_url, &buf) == 0){
+        if(S_ISREG(buf.st_mode) == -1){
+            perror("Is not regular file !");
             return -1;
         } else {
             return open(buffer_url, O_RDONLY);
@@ -178,7 +181,7 @@ int main(int argc, char *argv[]){
 			return -1;
 		}
 		chemin = strcat(argv[1],request.url);
-		printf("%s\n", chemin);
+		printf("document_root : %s\n", chemin);
 		if(stat(chemin, &buf)==0){/* ignore if directory */
 			if(S_ISDIR(buf.st_mode)== -1){
 				printf("%s %d\n", chemin, argc);
@@ -190,22 +193,20 @@ int main(int argc, char *argv[]){
 		}
 		printf("hey un nouveau client est connecté\n");
 		if(fork()==0){
-				FILE *open;
-				if((open= fdopen(clientfd, "w+"))== NULL){
-					perror("fdopen error");
-					return -1;
-				}
+            FILE *open;
+			if((open= fdopen(clientfd, "w+"))== NULL){
+				perror("fdopen error");
+				return -1;
+			}
 			int bad_request = parse_http_request(open, &request);
 			skip_headers(open);
 
 			/* envoie de la reponse au client */
 			if (bad_request == -2)
 				send_response(open , 400, request, "Bad Request", "Bad request\r\n");
-			else if (bad_request == -1)
-				send_response(open , 404, request, "Not Found", "Not Found\r\n");
 			else if (request.method == HTTP_UNSUPPORTED)
 				send_response(open , 405, request, "Method Not Allowed", "Method Not Allowed\r\n");
-			else if (strcmp(request.url, "/") == 0){
+			else /*if (strcmp(request.url, "/") == 0)*/{
 			    fd_target = check_and_open(request.url, argv[1]);
 				if(fd_target == -1){
 				    send_response(open , 404, request, "Not Found", "Not Found\r\n");
@@ -214,6 +215,7 @@ int main(int argc, char *argv[]){
 				    send_status(open, 200, "OK", request);
 				    fprintf(open, "Content-Length: %d", get_file_size(fd_target));
 				    fprintf(open, "\r\n");
+				    copy(fd_target, clientfd);
 				}
             }			
 			exit(0);
