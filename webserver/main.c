@@ -118,7 +118,11 @@ void send_response(FILE *client , int code ,http_request request, const char *re
 	fprintf(client,"%s",message_body);
 	fflush(client);
 }
+int check_and_open ( const char * url , const char * document_root ){
 
+
+return 0;
+}
 int main(int argc, char *argv[]){
 	http_request request; 
 	int clientfd, socket_serveur ;
